@@ -1,101 +1,158 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link"; // Import Link from next/link
+import { useRouter } from "next/navigation";
+import { FaHeart, FaShoppingCart, FaUser, FaBook } from "react-icons/fa";
+
+
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [books, setBooks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredBooks, setFilteredBooks] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const router = useRouter();
+
+  // Fetch books and categories from the API
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const booksResponse = await fetch("/api/books?type=books");
+        if (!booksResponse.ok) throw new Error("Failed to fetch books");
+        const booksData = await booksResponse.json();
+        setBooks(Array.isArray(booksData) ? booksData : []);
+        setFilteredBooks(Array.isArray(booksData) ? booksData : []);
+
+        const categoriesResponse = await fetch("/api/books?type=categories");
+        if (!categoriesResponse.ok)
+          throw new Error("Failed to fetch categories");
+        const categoriesData = await categoriesResponse.json();
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Filter books by search query and category
+  useEffect(() => {
+    if (Array.isArray(books)) {
+      const filtered = books.filter((book) => {
+        const matchesSearch = book.title
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        const matchesCategory =
+          selectedCategory === "All" || book.categoryID === selectedCategory;
+        return matchesSearch && matchesCategory;
+      });
+      setFilteredBooks(filtered);
+    }
+  }, [searchQuery, selectedCategory, books]);
+
+  return (
+    <div className="min-h-screen flex bg-[#FFF7EB]">
+      {/* Sidebar */}
+      <aside className="w-64 bg-[#FAF0DF] p-6">
+        <h1 className="text-lg font-bold mb-4 text-[#8D6F5E] flex items-center">
+          <FaBook className="mr-2" /> BooksRental.mv
+        </h1>
+        <nav>
+          <ul className="space-y-2">
+            <li className="hover:bg-[#EFE4D4] p-2 rounded-lg">
+              <a href="/" className="block text-[#8D6F5E]">
+                Home
+              </a>
+            </li>
+            <li className="hover:bg-[#EFE4D4] p-2 rounded-lg">
+              <a href="/books" className="block text-[#8D6F5E]">
+                Books
+              </a>
+            </li>
+            <li className="hover:bg-[#EFE4D4] p-2 rounded-lg">
+              <a href="/orders" className="block text-[#8D6F5E]">
+                Orders
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1">
+        {/* Navbar */}
+        <header className="bg-[#FAF0DF] py-4 pr-4 flex justify-between items-center">
+          <input
+            type="text"
+            placeholder="Search"
+            className="p-3 rounded-lg border border-[#E7D8C7] w-96 bg-[#FDF8F2] text-[#8D6F5E] placeholder-[#C6AC96]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="space-x-4 flex items-center">
+            <FaShoppingCart
+              className="text-2xl text-[#C69E80] hover:text-[#8D6F5E] cursor-pointer"
+              onClick={() => router.push("/cart")}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="p-6">
+          {/* Categories */}
+          <div className="mb-6 space-x-4">
+            <button
+              className={`px-4 py-2 rounded-lg ${
+                selectedCategory === "All" ? "bg-[#E3D9C5]" : "bg-[#EFE4D4]"
+              } hover:bg-[#E3D9C5] text-[#8D6F5E]`}
+              onClick={() => setSelectedCategory("All")}
+            >
+              All
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.categoryID}
+                className={`px-4 py-2 rounded-lg ${
+                  selectedCategory === category.categoryID
+                    ? "bg-[#E3D9C5]"
+                    : "bg-[#EFE4D4]"
+                } hover:bg-[#E3D9C5] text-[#8D6F5E]`}
+                onClick={() => setSelectedCategory(category.categoryID)}
+              >
+                {category.categoryName}
+              </button>
+            ))}
+          </div>
+
+          {/* Book Grid */}
+          <div className="grid grid-cols-4 gap-6">
+            {filteredBooks.length > 0 ? (
+              filteredBooks.map((book, index) => (
+                <Link key={index} href={`/books/${book.bookID}`} passHref>
+                  <div className="rounded-2xl bg-[#FFF7EB] p-4 hover:shadow-lg hover:bg-[#F5EAD5] cursor-pointer">
+                    <img
+                      src={`${book.imagePath}`}
+                      alt={book.title}
+                      className="mb-4 rounded-lg"
+                    />
+                    <h3 className="text-lg font-bold text-[#8D6F5E]">
+                      {book.title}
+                    </h3>
+                    <p className="text-[#B08968]">{book.author}</p>
+                    <p className="text-green-600 font-bold">
+                      ${book.rentalPrice.toFixed(2)}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <p className="text-[#8D6F5E]">No books available</p>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
